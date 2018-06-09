@@ -6,10 +6,12 @@ import argparse
 parser = argparse.ArgumentParser(description='Find numbers.')
 parser.add_argument('image', metavar='i', type=str, help='path to image')
 
-RESIZED_IMAGE_LENGTH = 500
+RESIZED_IMAGE_WIDTH = 1000
 
 image = cv.imread(parser.parse_args().image)
-image = cv.resize(image, (RESIZED_IMAGE_LENGTH, RESIZED_IMAGE_LENGTH), interpolation=cv.INTER_AREA)
+height, width, channels = image.shape
+resize_factor = RESIZED_IMAGE_WIDTH/width
+image = cv.resize(image, (0, 0), fx=resize_factor, fy=resize_factor, interpolation=cv.INTER_AREA)
 processed_image = helpers.preprocess_image(image)
 
 model_file = "digits_cls.pkl"
