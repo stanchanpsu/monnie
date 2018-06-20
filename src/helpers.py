@@ -4,7 +4,7 @@ from skimage.feature import hog
 
 
 def preprocess_image(image):
-    threshold = 120
+    threshold = 80
     max_threshold = 255
 
     gray_image = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
@@ -35,12 +35,12 @@ def find_numbers(image):
     std_height_of_numbers = np.std(heights_of_numbers)
 
     # limit only rectangles within 1 standard deviation in height from rest of rectangles
-    numbers = [number for number in numbers if number[3] < average_height_of_numbers + std_height_of_numbers and number[3] > average_height_of_numbers - std_height_of_numbers]
+    numbers = [number for number in numbers if number[3] < average_height_of_numbers + 3 * std_height_of_numbers and number[3] > average_height_of_numbers - 3 * std_height_of_numbers]
     return numbers
 
 def preprocess_number(roi, length, dilate_width):
     roi = cv.resize(roi, (length, length), interpolation=cv.INTER_AREA)
     roi = cv.dilate(roi, (dilate_width, dilate_width))
-    roi_hog_fd = hog(roi, orientations=9, pixels_per_cell=(14, 14), cells_per_block=(1, 1), block_norm='L1')
+    roi_hog_fd = hog(roi, orientations=9, pixels_per_cell=(14, 14), cells_per_block=(1, 1), block_norm='L1')        
     roi_hog_fd = np.array([roi_hog_fd], 'float64')
     return roi_hog_fd

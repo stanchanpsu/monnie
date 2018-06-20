@@ -6,11 +6,11 @@ import argparse
 parser = argparse.ArgumentParser(description='Find numbers.')
 parser.add_argument('image', metavar='i', type=str, help='path to image')
 
-RESIZED_IMAGE_WIDTH = 1000
-
+RESIZED_IMAGE_WIDTH = 800
 image = cv.imread(parser.parse_args().image)
 height, width, channels = image.shape
 resize_factor = RESIZED_IMAGE_WIDTH/width
+
 image = cv.resize(image, (0, 0), fx=resize_factor, fy=resize_factor, interpolation=cv.INTER_AREA)
 processed_image = helpers.preprocess_image(image)
 
@@ -20,17 +20,12 @@ classifier, preprocessor = joblib.load(model_file)
 numbers = helpers.find_numbers(processed_image)
 
 for number in numbers:
-    margin = 5
     x, y, w, h = number
-    bound_x = x - margin
-    bound_y = y - margin
-    bound_w = x + w + margin
-    bound_h = y + h + margin
-
-    # draw the rectangles
-    color = (255, 0, 0)
-    thickness = 5
-    cv.rectangle(image, (bound_x, bound_y), (bound_w, bound_h), color, thickness)
+    length = int(w * 1.9)
+    bound_x = int(x + w // 2 - length // 2)
+    bound_y = int(y + h // 2 - length // 2)
+    bound_w = bound_x + length
+    bound_h = bound_y + length
 
     # find region of interest (roi)
     roi = processed_image[bound_y:bound_h, bound_x:bound_w]
@@ -46,6 +41,11 @@ for number in numbers:
 
         # write the text on the original image
         cv.putText(image, str(int(number[0])), (x, y), cv.FONT_HERSHEY_DUPLEX, 2, (0, 0, 0), 3)
+
+    # draw the rectangles
+    color = (255, 0, 0)
+    thickness = 5
+    cv.rectangle(image, (bound_x, bound_y), (bound_w, bound_h), color, thickness)
 
 processed_image = cv.cvtColor(processed_image, cv.COLOR_GRAY2BGR)
 output = cv.hconcat((image, processed_image))

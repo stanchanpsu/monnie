@@ -4,7 +4,7 @@
 from sklearn.externals import joblib
 from sklearn import datasets
 from skimage.feature import hog
-from sklearn.svm import LinearSVC
+from sklearn.svm import LinearSVC, SVC
 from sklearn import preprocessing
 import numpy as np
 from collections import Counter
@@ -30,7 +30,7 @@ hog_features = pp.transform(hog_features)
 print("Count of digits in dataset", Counter(labels))
 
 # Create an linear SVM object
-clf = LinearSVC()
+clf = SVC()
 
 # Perform the training
 clf.fit(hog_features, labels)
