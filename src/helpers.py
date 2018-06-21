@@ -2,21 +2,40 @@ import cv2 as cv
 import numpy as np
 from skimage.feature import hog
 
+def find_edges(image):
+    edged = cv.Canny(image, 63, 65)
+    edged = cv.dilate(edged, (3, 3))
+    image, contours, hier = cv.findContours(edged.copy(), cv.RETR_LIST, cv.CHAIN_APPROX_SIMPLE)
+    edged = cv.cvtColor(edged, cv.COLOR_GRAY2BGR)
+    for contour in contours:
+        epsilon = 0.01 * cv.arcLength(contour, True)
+        approx = cv.approxPolyDP(contour, epsilon, True)
+        if len(approx) == 4 and abs(cv.contourArea(approx)) > 1000 and cv.isContourConvex(approx):
+            color = (0, 0, 255)
+            thickness = 3
+            cv.drawContours(edged, [approx], 0, color, thickness)
+            return (contour, edged)
+    return None, edged
 
 def preprocess_image(image):
-    threshold = 80
+    threshold = 120
     max_threshold = 255
 
     gray_image = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
     blurred_image = cv.GaussianBlur(gray_image, (5, 5), 0)
     ret, threshold_image = cv.threshold(blurred_image, threshold, max_threshold, cv.THRESH_BINARY_INV)
+    threshold_image = cv.dilate(threshold_image, (5, 5))
     return threshold_image
 
-def find_numbers(image):
-    image_height, image_width = image.shape
+def find_numbers(image, bounds):
+
+    # construct roi
+    black = np.zeros((image.shape[0], image.shape[1], 1), np.uint8)
+    cv.drawContours(black, [bounds], 0, 255, cv.FILLED)
+    masked = cv.bitwise_and(black, image)
 
     # find all the contours in the image
-    image, contours, hier = cv.findContours(image.copy(), cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+    image, contours, hier = cv.findContours(masked, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
 
     # bound the contours with rectangles
     rects = [cv.boundingRect(contour) for contour in contours]
@@ -26,7 +45,7 @@ def find_numbers(image):
     heights_of_numbers = []
     for rect in rects:
         x, y, w, h = rect
-        if x > 0 and y > 0 and x + w < image_width and y + h < image_height:
+        if cv.pointPolygonTest(bounds, (x, y), False) > 0 and cv.pointPolygonTest(bounds, (x + w, y + h), False) > 0:
             heights_of_numbers.append(h)
             numbers.append(rect)
 

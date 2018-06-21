@@ -6,18 +6,19 @@ import argparse
 parser = argparse.ArgumentParser(description='Find numbers.')
 parser.add_argument('image', metavar='i', type=str, help='path to image')
 
-RESIZED_IMAGE_WIDTH = 800
+RESIZED_IMAGE_WIDTH = 500
 image = cv.imread(parser.parse_args().image)
 height, width, channels = image.shape
 resize_factor = RESIZED_IMAGE_WIDTH/width
 
 image = cv.resize(image, (0, 0), fx=resize_factor, fy=resize_factor, interpolation=cv.INTER_AREA)
 processed_image = helpers.preprocess_image(image)
+bounds, edged = helpers.find_edges(processed_image)
 
 model_file = "digits_cls.pkl"
 classifier, preprocessor = joblib.load(model_file)
 
-numbers = helpers.find_numbers(processed_image)
+numbers = helpers.find_numbers(processed_image, bounds)
 
 for number in numbers:
     x, y, w, h = number
@@ -50,6 +51,7 @@ for number in numbers:
 processed_image = cv.cvtColor(processed_image, cv.COLOR_GRAY2BGR)
 output = cv.hconcat((image, processed_image))
 cv.imshow('output', output)
+cv.imshow('bounded', edged)
 
 
 print("=========================================")
