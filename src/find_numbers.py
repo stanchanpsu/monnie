@@ -6,23 +6,24 @@ import argparse
 parser = argparse.ArgumentParser(description='Find numbers.')
 parser.add_argument('image', metavar='i', type=str, help='path to image')
 
-RESIZED_IMAGE_WIDTH = 500
+model_file = "digits_cls.pkl"
+classifier, preprocessor = joblib.load(model_file)
+
+RESIZED_IMAGE_WIDTH = 800
 image = cv.imread(parser.parse_args().image)
 height, width, channels = image.shape
 resize_factor = RESIZED_IMAGE_WIDTH/width
 
 image = cv.resize(image, (0, 0), fx=resize_factor, fy=resize_factor, interpolation=cv.INTER_AREA)
+
 processed_image = helpers.preprocess_image(image)
 bounds, edged = helpers.find_edges(processed_image)
-
-model_file = "digits_cls.pkl"
-classifier, preprocessor = joblib.load(model_file)
 
 numbers = helpers.find_numbers(processed_image, bounds)
 
 for number in numbers:
     x, y, w, h = number
-    length = int(w * 1.9)
+    length = int(w * 2)
     bound_x = int(x + w // 2 - length // 2)
     bound_y = int(y + h // 2 - length // 2)
     bound_w = bound_x + length
@@ -48,10 +49,8 @@ for number in numbers:
     thickness = 5
     cv.rectangle(image, (bound_x, bound_y), (bound_w, bound_h), color, thickness)
 
-processed_image = cv.cvtColor(processed_image, cv.COLOR_GRAY2BGR)
-output = cv.hconcat((image, processed_image))
+output = cv.hconcat((image, edged))
 cv.imshow('output', output)
-cv.imshow('bounded', edged)
 
 
 print("=========================================")
