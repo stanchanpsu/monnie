@@ -1,7 +1,7 @@
 import cv2 as cv
 import numpy as np
 from skimage.feature import hog
-
+from colors import *
 
 def find_bounds(image):
     height, width = image.shape
@@ -26,7 +26,7 @@ def find_bounds(image):
         if len(approx) == 4 and abs(cv.contourArea(approx)) > expected_bounding_area and cv.isContourConvex(approx):
 
             # draw it on and return the bounds
-            color = (0, 0, 255)
+            color = GREEN
             thickness = 3
             cv.drawContours(bounded, [approx], 0, color, thickness)
             return (approx, bounded)
@@ -118,3 +118,9 @@ def preprocess_number(roi, length, dilate_width):
     # Convert hog to np.array
     roi_hog_fd = np.array([roi_hog_fd], 'float64')
     return roi_hog_fd
+
+def get_entire_amount(entire_amount_dict):
+    entire_amount = ""
+    for key, value in sorted(entire_amount_dict.items()):
+        entire_amount += value
+    return int(entire_amount)

@@ -1,5 +1,7 @@
 import cv2 as cv
 import helpers
+from colors import *
+from CurrencyConverter import CurrencyConverter
 from sklearn.externals import joblib
 import argparse
 
@@ -21,6 +23,8 @@ processed_image = helpers.preprocess_image(image)
 bounds, bounded_image = helpers.find_bounds(processed_image)
 
 numbers = helpers.find_numbers(processed_image, bounds)
+
+entire_number = {}
 
 for number in numbers:
     x, y, w, h = number
@@ -44,14 +48,22 @@ for number in numbers:
         number = classifier.predict(roi_hog_fd)
 
         # write the text on the original image
-        cv.putText(image, str(int(number[0])), (x, y),
-                   cv.FONT_HERSHEY_DUPLEX, 2, (0, 0, 0), 3)
+        number = str(int(number[0]))
+        cv.putText(image, number, (x, y),
+                   cv.FONT_HERSHEY_DUPLEX, 2, LIGHT_SEA_GREEN, 3)
 
-    # draw the rectangles
-    color = (255, 0, 0)
-    thickness = 5
-    cv.rectangle(image, (x1, y1),
-                 (x2, y2), color, thickness)
+        # draw the rectangles
+        thickness = 5
+        cv.rectangle(image, (x1, y1),
+                    (x2, y2), GREEN, thickness)
+
+        entire_number[x] = number
+
+entire_amount = helpers.get_entire_amount(entire_number)
+
+print(str(entire_amount) + ' USD')
+to_currency_amount = CurrencyConversion.convert_currency(entire_amount, 'EUR')
+print(to_currency_amount)
 
 output = cv.hconcat((image, bounded_image))
 cv.imshow('output', output)
